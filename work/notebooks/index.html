@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ranking Content for Review — FlyRank Capstone</title>
+<style>
+:root{--bg:#f7f7f4;--card:#fff;--ink:#182018;--muted:#667066;--line:#dfe3dc;--accent:#244d3a;--soft:#e9f0eb}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:var(--accent)}.wrap{max-width:1050px;margin:auto;padding:0 24px}
+header{padding:90px 0 65px;background:linear-gradient(135deg,#eef3ee,#f7f7f4)}
+.eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(2.5rem,6vw,4.7rem);line-height:1.03;max-width:900px;margin:18px 0}
+h2{font-size:2rem;line-height:1.2;margin-top:0}h3{margin-bottom:8px}
+.lede{font-size:1.2rem;color:var(--muted);max-width:760px}.meta{color:var(--muted)}
+nav{position:sticky;top:0;background:rgba(247,247,244,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:3}
+nav .wrap{display:flex;gap:18px;overflow:auto;padding-top:13px;padding-bottom:13px}nav a{white-space:nowrap;text-decoration:none;font-size:.9rem}
+section{padding:70px 0;border-bottom:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.metric{font-size:2.5rem;font-weight:800;line-height:1}.label{color:var(--muted);margin-top:8px}
+.callout{background:var(--soft);border-left:4px solid var(--accent);padding:20px 22px;border-radius:8px;margin:24px 0}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}th,td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line)}th{background:#eef2ed}
+.bar{height:28px;background:#dce7df;border-radius:99px;overflow:hidden;margin:10px 0 22px}.bar span{display:block;height:100%;background:var(--accent)}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:25px 0}.flow b{background:#fff;border:1px solid var(--line);padding:12px 15px;border-radius:10px}
+ol,ul{padding-left:22px}.small{font-size:.9rem;color:var(--muted)}
+footer{padding:55px 0 80px}.pill{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;margin:4px 4px 4px 0}
+@media(max-width:720px){.grid{grid-template-columns:1fr}header{padding-top:55px}section{padding:48px 0}h2{font-size:1.7rem}}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+<div class="eyebrow">FlyRank ML Capstone · Research Paper</div>
+<h1>Ranking Content for Review</h1>
+<p class="lede">An auditable machine-learning approach to identifying pages associated with observed performance decline and prioritizing them for human review.</p>
+<p class="meta">A public-safe, observational study using an anonymized FlyRank internship dataset.</p>
+<div style="margin-top:28px">
+<span class="pill">Decision support</span><span class="pill">Precision@50</span><span class="pill">Grouped validation</span><span class="pill">Leakage audit</span>
+</div>
+</div>
+</header>
+
+<nav><div class="wrap">
+<a href="#abstract">Abstract</a><a href="#intro">Introduction</a><a href="#data">Data</a><a href="#method">Methodology</a><a href="#results">Results</a><a href="#limits">Limitations</a><a href="#recommendations">Recommendations</a><a href="#repro">Reproducibility</a><a href="#credit">Data credit</a>
+</div></nav>
+
+<main>
+<section id="abstract"><div class="wrap">
+<h2>Abstract</h2>
+<p>This study asks whether observed content-performance signals can help rank pages for review when they are associated with declining performance. Using an anonymized FlyRank content dataset, I trained a Random Forest using CTR, average position, and engagement rate and evaluated its ranked output. The model achieved a measured Precision@50 of 0.74 under the original random split and 0.62 under a stricter grouped-by-client split, with 31 observed declines among the top 50 ranked pages in the grouped evaluation. The decrease under grouped validation shows that measured performance depends on the validation design and that the random-split result may be optimistic for unseen-client generalization. The resulting ranking is therefore presented as directional decision-support for human review, not as proof of causation, guaranteed recovery, or automatic content recommendations.</p>
+</div></section>
+
+<section id="intro"><div class="wrap">
+<h2>Introduction / Problem Statement</h2>
+<p>Content teams may have many pages to inspect, while only a subset show signals associated with declining performance. The practical decision is therefore not “Which page will definitely recover?” but “Which pages should a person review first?”</p>
+<p>This capstone tests whether a small set of observed performance signals can produce a useful ranked review queue. The intended output is a prioritized list, with simple reason codes that help a reviewer understand the signals behind the ranking.</p>
+<div class="callout"><strong>Decision supported:</strong> prioritize potentially declining pages for human review. The model does not decide what action should be taken and does not establish that an action will cause recovery.</div>
+</div></section>
+
+<section id="data"><div class="wrap">
+<h2>Data</h2>
+<div class="grid">
+<div class="card"><div class="metric">30K</div><div class="label">anonymized content items modeled</div></div>
+<div class="card"><div class="metric">44</div><div class="label">columns in the starter modeling dataset</div></div>
+<div class="card"><div class="metric">32</div><div class="label">pseudonymized clients represented</div></div>
+</div>
+<p>The experiment uses the FlyRank anonymized starter dataset provided for the internship. The broader FlyRank research work reports a much larger portfolio and uses a rolling 90-day performance window with a 30-day trend comparison. The model results reported here refer specifically to the 30,000-row anonymized modeling dataset used in the capstone, not to the entire production-scale warehouse.</p>
+<h3>Final modeling features</h3>
+<ul><li><code>ctr</code></li><li><code>avg_position</code></li><li><code>engagement_rate</code></li></ul>
+<h3>Excluded from modeling</h3>
+<p>Client and content identifiers were excluded as predictive features. Target-derived fields such as <code>trend_direction</code> and <code>trend_pct</code> were also excluded from the feature set. Private client names, domains, URLs, private queries, titles, and other identifying information are not presented in this public artifact.</p>
+</div></section>
+
+<section id="method"><div class="wrap">
+<h2>Methodology</h2>
+<h3>Label definition</h3>
+<p>The binary target is defined from <code>trend_direction</code>: <strong>down = 1</strong>, otherwise <strong>0</strong>. In the FlyRank research definition, trend direction is calculated from the 30-day versus previous 30-day impression change; “Down” represents more than a 10% decline.</p>
+<h3>Model</h3>
+<p>A Random Forest classifier was trained with 100 trees, <code>random_state=42</code>, and balanced class weights.</p>
+<h3>Baseline</h3>
+<p>The comparison uses the earlier rule-based prioritization approach. It combines observed content age, impressions, and decline-related information to produce a ranked queue. It is treated as a comparison rule, not causal evidence.</p>
+<h3>Validation design</h3>
+<div class="flow"><b>Week-5 random 80/20 split</b><span>→</span><b>ML-09 grouped-by-client 80/20 split</b><span>→</span><b>Top-50 evaluation</b></div>
+<p>The final audit keeps all pages from a client in either training or test data. This prevents the model from seeing other pages from the same client during training and provides a stricter test of unseen-client generalization.</p>
+<h3>Leakage audit</h3>
+<p>The final features were checked against known leakage fields including <code>is_declining_label</code>, <code>trend_direction</code>, <code>trend_pct</code>, <code>client_id</code>, and <code>content_id</code>. No direct feature-name overlap was found. A column check cannot, however, prove that feature and target time windows are completely separated; possible temporal overlap remains a limitation.</p>
+</div></section>
+
+<section id="results"><div class="wrap">
+<h2>Results</h2>
+<div class="grid">
+<div class="card"><div class="metric">0.74</div><div class="label">Precision@50 · random split</div></div>
+<div class="card"><div class="metric">0.62</div><div class="label">Precision@50 · grouped by client</div></div>
+<div class="card"><div class="metric">31 / 50</div><div class="label">observed declines in grouped top-50</div></div>
+</div>
+<h3>Validation sensitivity</h3>
+<p>The measured Precision@50 decreased by 0.12 when moving from the original random split to the stricter grouped-by-client split.</p>
+<div><strong>Random split · 0.74</strong><div class="bar"><span style="width:74%"></span></div>
+<strong>Grouped by client · 0.62</strong><div class="bar"><span style="width:62%"></span></div></div>
+<div class="callout"><strong>Interpretation:</strong> the random-split result should not be treated as the only estimate of performance. The grouped result is more conservative for the question of generalizing to clients not seen during training.</div>
+<h3>Model vs baseline</h3>
+<p>The final paper should compare the Random Forest and baseline on the <strong>same grouped test set</strong>. The baseline value is intentionally left to the executed notebook rather than fabricated here.</p>
+<table><thead><tr><th>Method</th><th>Validation</th><th>Precision@50</th></tr></thead>
+<tbody><tr><td>Random Forest</td><td>Grouped by client</td><td><strong>0.62</strong></td></tr>
+<tr><td>Rule-based baseline</td><td>Grouped by client</td><td><strong>[run notebook]</strong></td></tr></tbody></table>
+<p class="small">Do not replace the bracketed baseline value with the Week-5 random-split baseline; the comparison must use the same grouped test set.</p>
+</div></section>
+
+<section id="limits"><div class="wrap">
+<h2>Limitations & Honest Framing</h2>
+<ol>
+<li>The reported model metrics come from the 30,000-row anonymized starter dataset used for this experiment.</li>
+<li>Performance changed with validation design: Precision@50 was 0.74 under the random split and 0.62 under grouped-by-client validation.</li>
+<li>The model ranks pages associated with an observed decline label; it does not prove that a page will continue to decline.</li>
+<li>The study is observational. It does not establish that refreshing, rewriting, redirecting, or deleting a page causes recovery.</li>
+<li>The leakage audit found no direct target-derived columns in the final feature set, but a column-name audit cannot completely establish temporal separation.</li>
+<li>Model feature importance describes behavior of the fitted model; it should not be interpreted as evidence that a feature causes decline.</li>
+</ol>
+<div class="callout"><strong>Safe framing:</strong> observed · measured · directional · decision-support · human review</div>
+</div></section>
+
+<section id="recommendations"><div class="wrap">
+<h2>Ranked Recommendations</h2>
+<p>The model output becomes a review queue rather than an automatic action list.</p>
+<ol>
+<li><strong>Review the highest-ranked pages first.</strong> Use the model score to prioritize limited human attention.</li>
+<li><strong>Read the reason code with the metrics.</strong> Low CTR, high average position, or low engagement can explain why a page received a priority signal.</li>
+<li><strong>Check the page manually before acting.</strong> Confirm that the observed decline is meaningful and that the measurement is trustworthy.</li>
+<li><strong>Investigate content relevance and technical context.</strong> A model score alone does not explain why performance changed.</li>
+<li><strong>Keep irreversible actions human-controlled.</strong> Do not automatically delete, redirect, publish, rewrite, or otherwise change content from the model output.</li>
+</ol>
+<div class="callout"><strong>Action principle:</strong> Model score → ranked review queue → human investigation → human decision.</div>
+</div></section>
+
+<section id="repro"><div class="wrap">
+<h2>Reproducibility</h2>
+<p>The analysis is organized as a sequence of notebooks covering modeling, validation, leakage auditing, action recommendations, and the capstone paper artifacts.</p>
+<ul>
+<li><code>work/notebooks/w05_model.ipynb</code> — Week-5 modeling</li>
+<li><code>work/notebooks/w06_validation_audit.ipynb</code> — grouped validation and claim audit</li>
+<li><code>work/notebooks/w07_action_playbook.ipynb</code> — ranked actions and reason codes</li>
+<li><code>work/notebooks/capstone.ipynb</code> — paper artifacts</li>
+</ul>
+<p>Repository: <a href="https://github.com/Alien-is-here/FlyRank" target="_blank" rel="noopener">github.com/Alien-is-here/FlyRank</a></p>
+<p class="small">The public artifact excludes private client names, URLs, private queries, and other sensitive information.</p>
+</div></section>
+
+<section id="credit"><div class="wrap">
+<h2>Acknowledgments & Data Credit</h2>
+<p><strong>Built on the FlyRank ML Internship dataset.</strong></p>
+<p>Data source: <a href="https://flyrank.ai" target="_blank" rel="noopener">FlyRank</a>.</p>
+<p>This work was completed as part of the FlyRank ML Internship and uses anonymized internship data for educational and research purposes.</p>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+<p><strong>FlyRank ML Capstone</strong></p>
+<p class="small">A public-safe research artifact focused on measured ranking performance and honest interpretation.</p>
+</div></footer>
+</body>
+</html>
